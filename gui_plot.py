@@ -23,7 +23,7 @@ class plot_obj():
 
     def update_plot(self):
         self.axis.cla()
-        self.axis.set_xticklabels(self.time, rotation=30)
+        #self.axis.set_xticklabels(self.time, rotation=30)
         self.axis.set_xlabel("Time")
         self.axis.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         if(len(self.time) > 1):
@@ -31,6 +31,9 @@ class plot_obj():
             self.axis.set_ylim(min(self.vals) * .8, max(self.vals) * 1.15)
         else:
             self.axis.set_xlim(0, 1)
+            self.axis.set_ylim(0, 1)
+
+    def draw_plot(self):
         self.axis.plot_date(self.time, self.vals, linestyle='-', marker=',')
         self.graph.draw()
         self.graph.get_tk_widget().pack(side='top', fill='both', expand=1);
