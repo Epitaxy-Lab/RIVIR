@@ -2,25 +2,25 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import PySimpleGUI as sg
 import ocv, cv2, matplotlib
 import matplotlib.pyplot as plt
-import gui_plot
+import gui_plot, line_plot
 import datetime
 #from time import strftime
 from camera import *
 
+debug = False
 
 ### Initialize Variables
-camera, converter = ocv.initialize()
+if(debug == False):
+    camera, converter = ocv.initialize()
 
 corner1 = corner2 = curr_rect = None
 curr_rects = []
 rect_plots = []
 drag = False
 
-img_size = (500, 600)
-
-fig = matplotlib.figure.Figure(figsize=(2,1), dpi=10)
-fig.add_subplot(111).plot([], [])
-###1
+img_size = (400, 500)
+box_color = 'green'
+###
 
 def update_image():
     # Update graph with current image frame
@@ -28,12 +28,17 @@ def update_image():
 
     if(img_arr is not None):
         img_arr_gs = cv2.resize(img_arr, img_size)
-        img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
-        #img_arr = cv2.cvtColor(img_arr, cv2.COLOR_BGR2Luv)
-        cv2.imwrite("rheed.png", img_arr_cm)
-        graph_obj.draw_image("rheed.png", location=(0,600))
-        #im = cv2.imencode(".png", img_arr)[1].tobytes()
+        im = cv2.imencode(".png", cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV))[1].tobytes()
+        graph_obj.draw_image(data=im, location=(0,600))
+        #
         return img_arr_gs
+
+def webcam():
+    ret, frame = cap.read()
+    #img_arr = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    cv2.imwrite("test.png", frame)
+    graph_obj.draw_image("test.png", location=(0, 600))
+    return frame
 
 def check_click():
     # Click and Drag functionality
@@ -56,15 +61,17 @@ def click_and_drag(x, y):
     if curr_rect:
         graph_obj.delete_figure(curr_rect)
     if None not in (corner1, corner2):
-        curr_rect = graph_obj.draw_rectangle(corner1, corner2, line_color='red')
+        curr_rect = graph_obj.draw_rectangle(corner1, corner2, line_color=box_color)
 
 def save_rect():
     # Called upon mouse release
-    global corner1, corner2, curr_rects, drag
+    global corner1, corner2, curr_rects, drag, num_plots, window, graph_obj
     if(corner1 is not None and corner2 is not None):
         rect = (corner1, corner2)
         curr_rects.append(rect)
-        rect_plots.append(gui_plot.plot_obj(rect, window['plot'].TKCanvas))
+        num_plots += 1
+        window, graph_obj = redraw_lines(rect, rect_plots, num_plots)
+        rect_plots.append(line_plot.intensity_plot(rect, window['plot'+str(num_plots-1)].TKCanvas))
     corner1, corner2 = None, None
     drag = False
 
@@ -97,38 +104,57 @@ def update_plot(canvas):
     f_agg.draw()
     f_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
 
+def redraw_lines(rect, rect_plots, np):
+    new_window = sg.Window("RHEED Viewing Software", create_layout(np), location=(0, 0), finalize=True)
+    graph_obj = new_window['graf']
 
+    for i, plot in enumerate(rect_plots):
+        plot.update_canvas(new_window['plot'+str(i)].TKCanvas)
+
+    return (new_window, graph_obj)
 
 ### Set up GUI window
 sg.theme("Material1")
 
-layout = [
-    [sg.Text("RIVIR",
-            size=(15, 1),
-            font=("Courier, 72"),
-            justification="center")],
+def create_layout(num_plots):
+    graphs_part = [sg.Graph(canvas_size=img_size,
+        graph_bottom_left=(500, 0),
+        graph_top_right=(700, 100),
+        key=f"plot{i}") for i in range(num_plots)]
+    print(graphs_part)
+    layout = [
+        [sg.Text("RIVIR",
+                size=(15, 1),
+                font=("Courier, 72"),
+                justification="center")],
 
-    [sg.Text(" - Rheed Image VIeweR - ",
-            size=(40, 1),
-            font=("Courier, 28"),
-            justification="center")],
+        [sg.Text(" - Rheed Image VIeweR - ",
+                size=(40, 1),
+                font=("Courier, 28"),
+                justification="center")],
 
-    [sg.Graph(canvas_size=img_size,
-            graph_bottom_left=(0, 0),
-            graph_top_right=img_size,
-            key="graf",
-            change_submits=True,
-            drag_submits=True),
+        [sg.Graph(canvas_size=img_size,
+                graph_bottom_left=(0, 0),
+                graph_top_right=img_size,
+                key="graf",
+                change_submits=True,
+                drag_submits=True), sg.Column([graphs_part])],
 
-    sg.Canvas(key="plot")]
-    #[sg.Image(filename="", key="imgfeed")]
-]
+        [sg.Text("Bottom", size=(14, 1))]
+        #[sg.Image(filename="", key="imgfeed")]
+    ]
+    return layout
 ###
 
 # Create the window
-window = sg.Window("RHEED Viewing Software", layout, location=(0, 0), finalize=True)#, location=(800,400))
+num_plots = 0
+update_window = False
+window = sg.Window("RHEED Viewing Software", create_layout(num_plots), location=(0, 0), finalize=True)#, location=(800,400))
 graph_obj = window["graf"]
 
+
+if(debug):
+    cap = cv2.VideoCapture(0)
 
 ### EVENT LOOP ###
 while True:
@@ -136,18 +162,18 @@ while True:
     if event == "OK" or event == sg.WIN_CLOSED:
         break
 
-    img_array = update_image()
+    img_array = webcam() if debug else update_image()
     check_click()
 
     for rect in curr_rects:
-        graph_obj.draw_rectangle(rect[0], rect[1], line_color='red')
+        graph_obj.draw_rectangle(rect[0], rect[1], line_color=box_color)
 
     if img_array is not None:
         for plot in rect_plots:
             plot.update_vals(img_array)
-            window.write_event_value("-THREAD_", "Done.")
 
-print("Closing Camera Connection...")
-free_camera(camera)
+if(debug == False):
+    print("Closing Camera Connection...")
+    free_camera(camera)
 print("Exiting program.")
 window.close()
