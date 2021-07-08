@@ -18,6 +18,8 @@ class plot_obj():
         self.fig.autofmt_xdate()
         self.axis = self.fig.add_subplot(111)
         self.graph = FigureCanvasTkAgg(self.fig, canvas)
+        self.max_int = 0
+        self.min_int = 0
         self.vals = []
         self.time = []
 
@@ -28,7 +30,7 @@ class plot_obj():
         self.axis.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         if(len(self.time) > 1):
             self.axis.set_xlim(min(self.time), max(self.time))
-            self.axis.set_ylim(min(self.vals) * .8, max(self.vals) * 1.15)
+            self.axis.set_ylim(min(self.vals) * .8, self.max_int * 1.15)
         else:
             self.axis.set_xlim(0, 1)
         self.axis.plot_date(self.time, self.vals, linestyle='-', marker=',')
