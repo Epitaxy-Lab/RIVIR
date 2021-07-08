@@ -27,11 +27,10 @@ def update_image():
     img_arr = grab_image(camera, converter)
 
     if(img_arr is not None):
-        img_arr_gs = cv2.resize(img_arr, img_size)
         im = cv2.imencode(".png", cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV))[1].tobytes()
         graph_obj.draw_image(data=im, location=(0,600))
         #
-        return img_arr_gs
+        return img_arr
 
 def webcam():
     ret, frame = cap.read()
@@ -70,7 +69,10 @@ def save_rect():
         rect = (corner1, corner2)
         curr_rects.append(rect)
         num_plots += 1
-        window, graph_obj = redraw_lines(rect, rect_plots, num_plots)
+        new_window, graph_obj = redraw_lines(rect, rect_plots, num_plots)
+        old_window = window
+        window = new_window
+        #old_window.close()
         rect_plots.append(line_plot.intensity_plot(rect, window['plot'+str(num_plots-1)].TKCanvas))
     corner1, corner2 = None, None
     drag = False
@@ -116,9 +118,34 @@ def redraw_lines(rect, rect_plots, np):
 ### Set up GUI window
 sg.theme("Material1")
 
+# def create_layout():
+#     layout = [
+#         [sg.Text("RIVIR",
+#                 size=(15, 1),
+#                 font=("Courier, 72"),
+#                 justification="center")],
+#         [sg.Text(" - Rheed Image VIeweR - ",
+#                 size=(40, 1),
+#                 font=("Courier, 28"),
+#                 justification="center")],
+#         [sg.Graph(canvas_size=img_size,
+#                 graph_bottom_left=(0, 0),
+#                 graph_top_right=img_size,
+#                 key="graf",
+#                 change_submits=True,
+#                 drag_submits=True),
+#
+#         sg.Column[
+#             [sg.Graph(canvas_size=)]
+#         ]
+#
+#         [sg.Text("Bottom", size=(14, 1))]
+#         #[sg.Image(filename="", key="imgfeed")]
+#     ]
+
 def create_layout(num_plots):
-    graphs_part = [sg.Graph(canvas_size=img_size,
-        graph_bottom_left=(500, 0),
+    graphs_part = [sg.Graph(canvas_size=(700, 100),
+        graph_bottom_left=(0, 0),
         graph_top_right=(700, 100),
         key=f"plot{i}") for i in range(num_plots)]
     print(graphs_part)
