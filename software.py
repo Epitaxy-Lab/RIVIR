@@ -1,6 +1,6 @@
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import PySimpleGUI as sg
-import ocv, cv2, matplotlib
+import ocv, cv2, matplotlib, random
 import matplotlib.pyplot as plt
 import gui_plot
 import datetime
@@ -23,8 +23,8 @@ def update_image():
 
 def update_plots(plotter, image_arr, num):
     plotter.update_vals(image_arr)
-    time.sleep(.1)
-    window.write_event_value("THREAD_FIN", num)
+    #time.sleep(.1)
+    #window.write_event_value("THREAD_FIN", num)
 
 def check_click():
     # Click and Drag functionality
@@ -51,29 +51,17 @@ def click_and_drag(x, y):
 
 def save_rect():
     # Called upon mouse release
-    global corner1, corner2, curr_rects, drag
+    global corner1, corner2, curr_rects, drag, main_plot
     if(corner1 is not None and corner2 is not None):
         rect = (corner1, corner2)
-        curr_rects.append(rect)
-        rect_plots.append(gui_plot.plot_obj(rect, window['plot'].TKCanvas))
+        color = "#{:06x}".format(random.randint(0, 0xFFFFFF))
+        curr_rects.append((rect, color))
+        if main_plot is None:
+            main_plot = gui_plot.plot_obj(rect, window['plot'].TKCanvas)
+        else:
+            main_plot.add_line(rect)
     corner1, corner2 = None, None
     drag = False
-
-def check_plot(pixels):
-    # Plot selection
-    global curr_rects
-    if len(curr_rects) > 0:
-        rect = curr_rects[0]
-        x1, y1 = rect[0]
-        x2, y2 = rect[1]
-        avg_val = 0
-        n = 0
-        for x in range(min(x1,x2), max(x1,x2)):
-            for y in range(min(y1, y2), max(y1, y2)):
-                avg_val += sum(pixels[x][y])
-                n += 1
-        avg_val = avg_val / n
-        return avg_val
 
 def update_plot(canvas):
     global fig, rect_plot
@@ -95,7 +83,7 @@ if __name__ == "__main__":
 
     corner1 = corner2 = curr_rect = None
     curr_rects = []
-    rect_plots = []
+    main_plot = None
     drag = False
 
     img_size = (500, 600)
@@ -141,23 +129,17 @@ if __name__ == "__main__":
         if event is None:
             break
 
-        if event == "THREAD_FIN":
-            rect_plots[values[event]].draw_plot()
 
 
         img_array = update_image()
         check_click()
 
         for rect in curr_rects:
-            graph_obj.draw_rectangle(rect[0], rect[1], line_color='red')
+            graph_obj.draw_rectangle(rect[0][0], rect[0][1], line_color=rect[1])
 
-        if img_array is not None and len(rect_plots) > 0:
-            #result = multiprocess.Pool().map(update_plots, zip(rect_plots, [img_array*len(rect_plots)]));
-            for (i, plot) in enumerate(rect_plots):
-                threading.Thread(target=update_plots, args=[plot, img_array, i], daemon=True).start()
-                #print(Queue().get())
-                #plot.update_vals(img_array)
-                #window.write_event_value("-THREAD_", "Done.")
+        if img_array is not None and main_plot is not None:
+            main_plot.update_vals(img_array)
+            main_plot.draw_plot()
 
     print("Closing Camera Connection...")
     free_camera(camera)
