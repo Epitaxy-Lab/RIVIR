@@ -23,6 +23,8 @@ class plot_obj():
         self.graph = FigureCanvasTkAgg(self.fig, canvas)
         self.rects = [coord(rect_coords)]
         self.plot_vals = [([],[])]
+        self.max_int = 0
+        self.min_int = 0
 
     def add_line(self, rect_coords):
         self.rects.append(coord(rect_coords))
@@ -39,7 +41,7 @@ class plot_obj():
         longest_time = self.plot_vals[0][1]
         if(len(longest_time) > 1):
             self.axis.set_xlim(min(longest_time), max(longest_time))
-            self.axis.set_ylim(min(self.plot_vals[0][0]) * .8, max(self.plot_vals[0][0]) * 1.15)
+            self.axis.set_ylim(self.min_int * .8, self.max_int * 1.15)
         else:
             self.axis.set_xlim(0, 1)
             self.axis.set_ylim(0, 1)
@@ -58,6 +60,12 @@ class plot_obj():
                 avg_val += sum(pixels[x][y])
                 n += 1
         avg_val = avg_val / n
+
+        if avg_val > self.max_int:
+            self.max_int = avg_val
+        if avg_val < self.min_int:
+            self.min_int = avg_val
+
         now = datetime.datetime.now()
 
         self.plot_vals[ind][0].append(avg_val)
