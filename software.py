@@ -3,7 +3,7 @@ import PySimpleGUI as sg
 import ocv, cv2, matplotlib
 import matplotlib.pyplot as plt
 import gui_plot, line_plot
-import datetime
+import datetime, threading
 #from time import strftime
 from camera import *
 
@@ -115,6 +115,10 @@ def redraw_lines(rect, rect_plots, np):
 
     return (new_window, graph_obj)
 
+def plot_snakes(plotter, img_array, i):
+    plotter.update_vals(img_array)
+    window.write_event_value("-THREAD-", i)
+
 ### Set up GUI window
 sg.theme("Material1")
 
@@ -192,12 +196,15 @@ while True:
     img_array = webcam() if debug else update_image()
     check_click()
 
+    if event == '-THREAD-':
+        rect_plots[values[event]].display()
+
     for rect in curr_rects:
         graph_obj.draw_rectangle(rect[0], rect[1], line_color=box_color)
 
     if img_array is not None:
-        for plot in rect_plots:
-            plot.update_vals(img_array)
+        for i, plot in enumerate(rect_plots):
+            threading.Thread(target=plot_snakes, args=(plot, img_array, i), daemon=True).start()
 
 if(debug == False):
     print("Closing Camera Connection...")

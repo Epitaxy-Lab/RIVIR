@@ -1,4 +1,3 @@
-
 def assign_points(coords):
     x1 = min(coords[0][0], coords[1][0])
     x2 = max(coords[0][0], coords[1][0])
@@ -13,8 +12,8 @@ class intensity_plot():
         self.canvas = canvas
         self.canvas.pack(side="top", fill="both", expand=True)
 
-        self.line = self.canvas.create_line(0, 0, 0, 0, fill="orange", width=3)
-
+        self.line = self.canvas.create_line(0, 0, 1, 1, fill="orange", width=3)
+        self.coords = self.canvas.coords(self.line)
 
     def update_vals(self, pixels):
         avg_val = n = 0
@@ -26,17 +25,18 @@ class intensity_plot():
         #now = datetime.datetime.now()
 
         self.add_point(avg_val/100)
-        self.canvas.pack(side="top", fill="both", expand="True")
 
     def add_point(self, p):
-        coords = self.canvas.coords(self.line)
-        x = coords[-2] + 1
-        coords.append(x)
-        coords.append(p)
-        coords = coords[-200:]
-        self.canvas.coords(self.line, *coords)
+        x = self.coords[-2] + 1
+        self.coords.append(x)
+        self.coords.append(p)
+        #coords = coords[-200:]
+
+    def display(self):
+        self.canvas.coords(self.line, *self.coords)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        self.canvas.pack(side="top", fill="both", expand="True")
 
     def update_canvas(self, canvas):
         self.canvas = canvas
-        self.canvas.create_line(0, 0, 0, 0, fill="green", width=3)
+        self.canvas.create_line(*self.coords, fill="green", width=3)
