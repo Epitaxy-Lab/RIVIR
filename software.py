@@ -13,8 +13,8 @@ def update_image():
     img_arr = grab_image(camera, converter)
 
     if(img_arr is not None):
-        #img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
-        img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2Luv)
+        img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
+        #img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2Luv)
         cv2.imwrite("rheed.png", img_arr_cm)
         graph_obj.draw_image("rheed.png", location=(0,600))
         #im = cv2.imencode(".png", img_arr)[1].tobytes()
@@ -46,7 +46,7 @@ def click_and_drag(x, y):
     if curr_rect:
         graph_obj.delete_figure(curr_rect)
     if None not in (corner1, corner2):
-        curr_rect = graph_obj.draw_rectangle(corner1, corner2, line_color='red')
+        curr_rect = graph_obj.draw_rectangle(corner1, corner2, line_color='yellow')
 
 def save_rect():
     # Called upon mouse release
@@ -97,12 +97,12 @@ if __name__ == "__main__":
 
     layout = [
         [sg.Text("RIVIR",
-                size=(15, 1),
+                size=(20, 1),
                 font=("Courier, 72"),
                 justification="center")],
 
         [sg.Text(" - Rheed Image VIeweR - ",
-                size=(40, 1),
+                size=(50, 1),
                 font=("Courier, 28"),
                 justification="center")],
 
