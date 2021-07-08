@@ -13,13 +13,12 @@ def update_image():
     img_arr = grab_image(camera, converter)
 
     if(img_arr is not None):
-        img_arr_gs = cv2.resize(img_arr, img_size)
         #img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
         img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2Luv)
         cv2.imwrite("rheed.png", img_arr_cm)
         graph_obj.draw_image("rheed.png", location=(0,600))
         #im = cv2.imencode(".png", img_arr)[1].tobytes()
-        return img_arr_gs
+        return img_arr
 
 def update_plots(plotter, image_arr, num):
     plotter.update_vals(image_arr)
@@ -54,6 +53,7 @@ def save_rect():
     global corner1, corner2, curr_rects, drag, main_plot
     if(corner1 is not None and corner2 is not None):
         rect = (corner1, corner2)
+        print(rect)
         color = "#{:06x}".format(random.randint(0, 0xFFFFFF))
         curr_rects.append((rect, color))
         if main_plot is None:

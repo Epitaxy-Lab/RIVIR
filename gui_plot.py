@@ -1,5 +1,5 @@
 import matplotlib
-import datetime
+import datetime, warnings
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -31,7 +31,9 @@ class plot_obj():
 
     def update_plot(self):
         self.axis.cla()
-        #self.axis.set_xticklabels(self.time, rotation=30)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            self.axis.set_xticklabels(self.plot_vals[0][1], rotation=30)
         self.axis.set_xlabel("Time")
         self.axis.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         longest_time = self.plot_vals[0][1]
@@ -43,9 +45,8 @@ class plot_obj():
             self.axis.set_ylim(0, 1)
 
     def draw_plot(self):
-        print(len(self.plot_vals))
         for values in self.plot_vals:
-            self.axis.plot_date(values[1], values[0])
+            self.axis.plot_date(values[1], values[0], linestyle='-', marker=',')
         self.graph.draw()
         self.graph.get_tk_widget().pack(side='top', fill='both', expand=1);
 
