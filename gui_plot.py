@@ -50,6 +50,7 @@ class plot_obj():
         for values in self.plot_vals:
             self.axis.plot_date(values[1], values[0], linestyle='-', marker=',')
         self.graph.draw()
+        plt.ion()
         self.graph.get_tk_widget().pack(side='top', fill='both', expand=1);
 
     def update_val(self, ind, pixels):

@@ -129,8 +129,6 @@ if __name__ == "__main__":
         if event is None:
             break
 
-
-
         img_array = update_image()
         check_click()
 
