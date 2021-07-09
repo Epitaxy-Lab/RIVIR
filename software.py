@@ -9,7 +9,7 @@ import time
 from camera import *
 
 ### SET TO USE WEBCAM
-debug = False
+debug = True
 
 def update_image():
     # Update graph with current image frame
@@ -22,6 +22,13 @@ def update_image():
         graph_obj.draw_image("rheed.png", location=(0,600))
         #im = cv2.imencode(".png", img_arr)[1].tobytes()
         return img_arr
+
+def webcam():
+    ret, frame = cap.read()
+    #img_arr = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    cv2.imwrite("test.png", frame)
+    graph_obj.draw_image("test.png", location=(0, 600))
+    return frame
 
 def update_plots(plotter, image_arr, num):
     plotter.update_vals(image_arr)
@@ -56,7 +63,6 @@ def save_rect():
     global corner1, corner2, curr_rects, drag, main_plot
     if(corner1 is not None and corner2 is not None):
         rect = (corner1, corner2)
-        print(rect)
         color = "#{:06x}".format(random.randint(0, 0xFFFFFF))
         curr_rects.append((rect, color))
         if main_plot is None:
@@ -122,6 +128,8 @@ if __name__ == "__main__":
     window = sg.Window("RHEED Viewing Software", layout, location=(0, 0), finalize=True)#, location=(800,400))
     graph_obj = window["graf"]
 
+    if(debug):
+        cap = cv2.VideoCapture(0)
 
     ### EVENT LOOP ###
     while True:
@@ -129,7 +137,7 @@ if __name__ == "__main__":
         if event is None:
             break
 
-        img_array = update_image()
+        img_array = webcam() if debug else update_image()
         check_click()
 
         for rect in curr_rects:
@@ -139,7 +147,8 @@ if __name__ == "__main__":
             main_plot.update_vals(img_array)
             main_plot.draw_plot()
 
-    print("Closing Camera Connection...")
-    free_camera(camera)
+    if(debug == False):
+        print("Closing Camera Connection...")
+        free_camera(camera)
     print("Exiting program.")
     window.close()
