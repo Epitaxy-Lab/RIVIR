@@ -8,6 +8,9 @@ import threading
 import time
 from camera import *
 
+### SET TO USE WEBCAM
+debug = False
+
 def update_image():
     # Update graph with current image frame
     img_arr = grab_image(camera, converter)
@@ -79,7 +82,8 @@ def update_plot(canvas):
 
 if __name__ == "__main__":
     ### Initialize Variables
-    camera, converter = ocv.initialize()
+    if(debug == False):
+        camera, converter = ocv.initialize()
 
     corner1 = corner2 = curr_rect = None
     curr_rects = []
@@ -87,10 +91,6 @@ if __name__ == "__main__":
     drag = False
 
     img_size = (500, 600)
-
-    fig = matplotlib.figure.Figure(figsize=(2,1), dpi=10)
-    fig.add_subplot(111).plot([], [])
-    ###
 
     ### Set up GUI window
     sg.theme("Material1")
