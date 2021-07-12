@@ -44,9 +44,9 @@ def grab_image(cam, conv):
     '''
     grab = cam.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException) #TODO: verify timeout
 
-    # if not grab.GrabSucceeded():
-    #      print(grab.ErrorCode)
-    #      print(grab.ErrorDescription)
+    if not grab.GrabSucceeded():
+         print(grab.ErrorCode)
+         print(grab.ErrorDescription)
          #raise OSError("Grab failure.")
 
     if grab.GrabSucceeded():

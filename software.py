@@ -44,6 +44,9 @@ def check_inp(event):
         save_rect()
     elif event.isdigit():
         to_rm = int(event)-1
+        if(to_rm >= len(curr_rects)):
+            print("Rectangle index too high.")
+            return
         del curr_rects[to_rm]
         return to_rm
     elif event == "Save Image":
@@ -100,6 +103,7 @@ def update_plot(canvas):
 
 def thread_plot(plotter, img_arr):
     plotter.update_vals(img_arr)
+    #plotter.draw_plot()
 
 
 if __name__ == "__main__":
@@ -155,9 +159,10 @@ if __name__ == "__main__":
 
     ### EVENT LOOP ###
     while True:
-        event, values = window.read(timeout=1)
+        event, values = window.read(timeout=0)
         if event is None:
             break
+
         img_array = webcam() if debug else update_image()
         success = img_array is not None
         inp_ret = check_inp(event)
@@ -169,12 +174,12 @@ if __name__ == "__main__":
                     main_plot = main_plot.del_self()
             elif(inp_ret == -1):
                 save_im = True
-            elif(inp_ret == -2):
+            elif(inp_ret == -2 and main_plot is not None):
                 main_plot.clear()
 
 
         if save_im and success:
-            filename = "data/%s" % datetime.now().strftime("RIVIR-%m%d_%H%M%S.jpg")
+            filename = "data/%s" % datetime.datetime.now().strftime("RIVIR-%m%d_%H%M%S.jpg")
             print(filename)
             print(cv2.imwrite(filename, img_array))
             save_im = False
@@ -185,8 +190,8 @@ if __name__ == "__main__":
             r_count+=1
 
         if success and main_plot is not None:
-            #threading.Thread(target=thread_plot, args=(main_plot, img_array), daemon=True).start()
-            main_plot.update_vals(img_array)
+            threading.Thread(target=thread_plot, args=(main_plot, img_array), daemon=True).start()
+            #main_plot.update_vals(img_array)
             main_plot.draw_plot()
 
     if(debug == False):

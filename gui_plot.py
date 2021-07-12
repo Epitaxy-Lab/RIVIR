@@ -67,15 +67,9 @@ class plot_obj():
         self.plot_vals = new_vals
 
     def update_plot(self):
-        self.axis.cla()
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            self.axis.set_xticklabels(self.plot_vals[0][1], rotation=30)
-        self.axis.set_xlabel("Time")
-        self.axis.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         longest_time = self.plot_vals[0][1]
         if(len(longest_time) > 1):
-            self.axis.set_xlim(min(longest_time), max(longest_time))
+            self.axis.set_xlim(longest_time[0], longest_time[-1])
             self.axis.set_ylim(self.min_int * .8, self.max_int * 1.15)
         else:
             self.axis.set_xlim(0, 1)
@@ -85,8 +79,10 @@ class plot_obj():
         self.fig.canvas.restore_region(self.bg)
         for i, p in enumerate(self.plots):
             values = self.plot_vals[i]
-            p[0].set_ydata(values[0])
-            p[0].set_xdata(values[1])
+            x = values[1]
+            y = values[0][:len(x)]
+            p[0].set_ydata(y)
+            p[0].set_xdata(x)
             self.axis.draw_artist(p[0])
         self.graph.blit(self.fig.bbox)
         self.fig.canvas.flush_events()
@@ -94,7 +90,6 @@ class plot_obj():
 
 
     def update_val(self, ind, pixels):
-        start = time.time()
         avg_val = n = 0
         corners = self.rects[ind]
         for x in range(corners.x1, corners.x2, 3):
@@ -124,7 +119,6 @@ class plot_obj():
     def update_vals(self, pixels):
         for i in range(len(self.rects)):
             self.update_val(i, pixels)
-
         self.update_plot()
 
     def del_self(self):
