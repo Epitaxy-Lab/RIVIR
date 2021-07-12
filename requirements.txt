@@ -1,0 +1,4 @@
+matplotlib==3.3.1
+plotly==4.14.3
+pypylon==1.7.2
+PySimpleGUI==4.45.0
