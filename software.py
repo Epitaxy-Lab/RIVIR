@@ -5,23 +5,23 @@ import matplotlib.pyplot as plt
 import gui_plot
 import datetime
 import threading
-import time
+import datetime, os
 from camera import *
 
 ### SET TO USE WEBCAM
-debug = True
+debug = False
 
 def update_image():
     # Update graph with current image frame
     img_arr = grab_image(camera, converter)
 
     if(img_arr is not None):
-        img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
+        conv = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
+        im = cv2.imencode(".png", conv)[1].tobytes()
         #img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2Luv)
-        cv2.imwrite("rheed.png", img_arr_cm)
-        graph_obj.draw_image("rheed.png", location=(0,600))
+        graph_obj.draw_image(data=im, location=(0,600))
         #im = cv2.imencode(".png", img_arr)[1].tobytes()
-        return img_arr
+        return conv
 
 def webcam():
     ret, frame = cap.read()
@@ -35,13 +35,21 @@ def update_plots(plotter, image_arr, num):
     #time.sleep(.1)
     #window.write_event_value("THREAD_FIN", num)
 
-def check_click():
+def check_inp(event):
     # Click and Drag functionality
     if event == "graf":
         x, y = values["graf"]
         click_and_drag(x, y)
     elif event.endswith('+UP'):
         save_rect()
+    elif event.isdigit():
+        to_rm = int(event)-1
+        del curr_rects[to_rm]
+        return to_rm
+    elif event == "Save Image":
+        return -1
+    elif event == "Clear Plot":
+        return -2
 
 def click_and_drag(x, y):
     global drag, corner1, corner2, curr_rect
@@ -49,6 +57,7 @@ def click_and_drag(x, y):
     if not drag:
         corner1 = (x, y)
         drag = True
+        graph_obj.draw_text(str(len(curr_rects)+1), corner1, font=("Arial", 64))
     else:
         corner2 = (x, y)
 
@@ -56,7 +65,11 @@ def click_and_drag(x, y):
     if curr_rect:
         graph_obj.delete_figure(curr_rect)
     if None not in (corner1, corner2):
-        curr_rect = graph_obj.draw_rectangle(corner1, corner2, line_color='yellow')
+        draw_rect_pair(corner1, corner2, str(len(curr_rects)+1))
+
+def draw_rect_pair(corner1, corner2, i, color="yellow"):
+    curr_rect = graph_obj.draw_rectangle(corner1, corner2, line_color=color)
+    graph_obj.draw_text(i, corner1, color="white", font=("Arial", 32))
 
 def save_rect():
     # Called upon mouse release
@@ -66,9 +79,9 @@ def save_rect():
         color = "#{:06x}".format(random.randint(0, 0xFFFFFF))
         curr_rects.append((rect, color))
         if main_plot is None:
-            main_plot = gui_plot.plot_obj(rect, window['plot'].TKCanvas)
+            main_plot = gui_plot.plot_obj(rect, window['plot'].TKCanvas, color)
         else:
-            main_plot.add_line(rect)
+            main_plot.add_line(rect, color)
     corner1, corner2 = None, None
     drag = False
 
@@ -85,6 +98,9 @@ def update_plot(canvas):
     f_agg.draw()
     f_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
 
+def thread_plot(plotter, img_arr):
+    plotter.update_vals(img_arr)
+
 
 if __name__ == "__main__":
     ### Initialize Variables
@@ -94,7 +110,7 @@ if __name__ == "__main__":
     corner1 = corner2 = curr_rect = None
     curr_rects = []
     main_plot = None
-    drag = False
+    drag = save_im = False
 
     img_size = (500, 600)
 
@@ -119,31 +135,57 @@ if __name__ == "__main__":
                 change_submits=True,
                 drag_submits=True),
 
-        sg.Canvas(key="plot")]
+        sg.Canvas(key="plot")],
+
+        [sg.Button("Save Image", size=(20,1)),
+        sg.Button("Clear Plot", size=(20,1))]
         #[sg.Image(filename="", key="imgfeed")]
     ]
     ###
 
     # Create the window
-    window = sg.Window("RHEED Viewing Software", layout, location=(0, 0), finalize=True)#, location=(800,400))
+    window = sg.Window("RHEED Viewing Software", layout, location=(0, 0), return_keyboard_events=True, element_justification='c', finalize=True)#, location=(800,400))
     graph_obj = window["graf"]
 
     if(debug):
         cap = cv2.VideoCapture(0)
+
+    if not os.path.isdir("data"):
+        os.mkdir("data")
 
     ### EVENT LOOP ###
     while True:
         event, values = window.read(timeout=1)
         if event is None:
             break
-
         img_array = webcam() if debug else update_image()
-        check_click()
+        success = img_array is not None
+        inp_ret = check_inp(event)
 
+        if inp_ret is not None:
+            if(inp_ret >= 0):
+                num_rcts = main_plot.del_line(inp_ret)
+                if(num_rcts == 0):
+                    main_plot = main_plot.del_self()
+            elif(inp_ret == -1):
+                save_im = True
+            elif(inp_ret == -2):
+                main_plot.clear()
+
+
+        if save_im and success:
+            filename = "data/%s" % datetime.now().strftime("RIVIR-%m%d_%H%M%S.jpg")
+            print(filename)
+            print(cv2.imwrite(filename, img_array))
+            save_im = False
+
+        r_count = 1
         for rect in curr_rects:
-            graph_obj.draw_rectangle(rect[0][0], rect[0][1], line_color=rect[1])
+            draw_rect_pair(rect[0][0], rect[0][1], r_count, color=rect[1])
+            r_count+=1
 
-        if img_array is not None and main_plot is not None:
+        if success and main_plot is not None:
+            #threading.Thread(target=thread_plot, args=(main_plot, img_array), daemon=True).start()
             main_plot.update_vals(img_array)
             main_plot.draw_plot()
 
