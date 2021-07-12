@@ -82,25 +82,15 @@ class plot_obj():
             self.axis.set_ylim(0, 1)
 
     def draw_plot(self):
-        # start = time.time()
-        # print(self.plots)
         self.fig.canvas.restore_region(self.bg)
-        longest_time = self.plot_vals[0][1]
         for i, p in enumerate(self.plots):
             values = self.plot_vals[i]
             p[0].set_ydata(values[0])
             p[0].set_xdata(values[1])
-            #self.axis.plot(values[1], values[0], linestyle='-', marker=',', animated=True)
             self.axis.draw_artist(p[0])
-        if(len(longest_time) > 1):
-            self.axis.set_xlim(min(longest_time), max(longest_time))
-            self.axis.set_ylim(self.min_int * .8, self.max_int * 1.15)
         self.graph.blit(self.fig.bbox)
-        #self.graph.draw()
-        #self.graph.get_tk_widget().pack(side='top', fill='both', expand=1);
-        # end = time.time()
-        # print("TOTAL PLOTTING TIME: ", end - start)
-        #plt.pause(.05)
+        self.fig.canvas.flush_events()
+
 
 
     def update_val(self, ind, pixels):

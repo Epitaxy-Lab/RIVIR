@@ -17,7 +17,7 @@ def init_cam_w_video():
     camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
     print("Connection established with device: ", camera.GetDeviceInfo().GetModelName())
 
-    camera.StartGrabbing(pylon.GrabStrategy_LatestImages) #OneByOne used to ensure processing done in order.
+    camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly) #OneByOne used to ensure processing done in order.
     return camera
 
 def init_OCV_converter():

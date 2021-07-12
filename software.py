@@ -192,5 +192,6 @@ if __name__ == "__main__":
     if(debug == False):
         print("Closing Camera Connection...")
         free_camera(camera)
+    else:
+        cap.release()
     print("Exiting program.")
-    window.close()
