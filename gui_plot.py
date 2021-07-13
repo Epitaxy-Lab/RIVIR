@@ -41,7 +41,7 @@ class plot_obj():
         self.bg = self.graph.copy_from_bbox(self.axis.bbox)
         self.rects = [coord(rect_coords)]
         self.plot_vals = [[[],[]]]
-        self.plots = [self.axis.plot([], [], linestyle='-', marker=',', animated=True, color=color)]
+        self.plots = [self.axis.plot_date([], [], linestyle='-', marker=',', animated=True, color=color)]
         #self.num_resizes = [0]
         self.max_int = 0
         self.min_int = 0
@@ -52,7 +52,7 @@ class plot_obj():
     def add_line(self, rect_coords, color):
         self.rects.append(coord(rect_coords))
         self.plot_vals.append([[],[]])
-        self.plots.append(self.axis.plot([], [], linestyle='-', marker=',', animated=True, color=color))
+        self.plots.append(self.axis.plot_date([], [], linestyle='-', marker=',', animated=True, color=color))
 
     def del_line(self, ind):
         del self.rects[ind]

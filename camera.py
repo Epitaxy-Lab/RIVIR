@@ -42,12 +42,12 @@ def grab_image(cam, conv):
     @raise OSError: grab unsuccessful
     @raise TimeoutError: camera exceeded timeout time
     '''
-    grab = cam.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException) #TODO: verify timeout
+    grab = cam.RetrieveResult(10000, pylon.TimeoutHandling_ThrowException) #TODO: verify timeout
 
-    if not grab.GrabSucceeded():
-         print(grab.ErrorCode)
-         print(grab.ErrorDescription)
-         #raise OSError("Grab failure.")
+    # if not grab.GrabSucceeded():
+    #      print(grab.ErrorCode)
+    #      print(grab.ErrorDescription)
+    #      #raise OSError("Grab failure.")
 
     if grab.GrabSucceeded():
         image = conv.Convert(grab)
