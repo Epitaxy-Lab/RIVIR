@@ -7,7 +7,6 @@ import matplotlib.dates as mdates
 import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-
 plt.style.use("fast")
 
 def assign_points(coords):
@@ -31,17 +30,17 @@ class coord():
 class plot_obj():
     def __init__(self, rect_coords, canvas, color):
         self.fig = plt.Figure()
-        ax = plt.Figure()
         self.fig.autofmt_xdate()
         self.axis = self.fig.add_subplot(111)
         self.axis.axis("off")
+        self.axis.set_facecolor("#e3f2fd")
         self.graph = FigureCanvasTkAgg(self.fig, canvas)
         self.graph.draw()
         self.graph.get_tk_widget().pack(side='right', fill='both', expand=1)
         self.bg = self.graph.copy_from_bbox(self.axis.bbox)
         self.rects = [coord(rect_coords)]
         self.plot_vals = [[[],[]]]
-        self.plots = [self.axis.plot_date([], [], linestyle='-', marker=',', animated=True, color=color)]
+        self.plots = [self.axis.plot_date([], [], linestyle='-', marker=',', animated=True, color=color,alpha=0.3)]
         #self.num_resizes = [0]
         self.max_int = 0
         self.min_int = 0
@@ -92,8 +91,8 @@ class plot_obj():
     def update_val(self, ind, pixels):
         avg_val = n = 0
         corners = self.rects[ind]
-        for x in range(corners.x1, corners.x2, 3):
-            for y in range(corners.y1, corners.y2, 3):
+        for x in range(corners.x1, corners.x2, 6):
+            for y in range(corners.y1, corners.y2, 6):
                 avg_val += sum(pixels[x][y])
                 n += 1
         avg_val = avg_val / n
