@@ -16,6 +16,9 @@ def init_cam_w_video():
     '''
     camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
     print("Connection established with device: ", camera.GetDeviceInfo().GetModelName())
+    camera.Open()
+    camera.GevSCPD.SetValue(1000)
+    camera.GevSCPSPacketSize.SetValue(500)
 
     camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
     return camera
@@ -54,7 +57,7 @@ def grab_image(cam, conv):
         pixel_arr = image.GetArray()
 
         return pixel_arr
-        
+
     grab.Release()
     return None
 

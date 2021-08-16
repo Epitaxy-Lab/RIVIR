@@ -29,11 +29,12 @@ class coord():
 
 class plot_obj():
     def __init__(self, rect_coords, canvas, color):
-        self.fig = plt.Figure()
+        self.fig = plt.Figure(frameon=False)
         self.fig.autofmt_xdate()
         self.axis = self.fig.add_subplot(111)
+        self.fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
         #self.axis.axis("off")
-        self.axis.set_facecolor("#e3f2fd")
+        #self.axis.set_facecolor("#e3f2fd")
         self.graph = FigureCanvasTkAgg(self.fig, canvas)
         self.graph.draw()
         self.graph.get_tk_widget().pack(side='right', fill='both', expand=1)
