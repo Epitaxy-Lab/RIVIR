@@ -12,18 +12,21 @@ from camera import *
 debug = False
 
 def update_image():
-    # Update graph with current image frame
+    '''
+    Get the latest frame from the input camera. Applies a color mapping to the grayscale image.
+    '''
     img_arr = grab_image(camera, converter)
 
     if(img_arr is not None):
         conv = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
         im = cv2.imencode(".png", conv)[1].tobytes()
-        #img_arr_cm = cv2.cvtColor(img_arr, cv2.COLOR_BGR2Luv)
         graph_obj.draw_image(data=im, location=(0,600))
-        #im = cv2.imencode(".png", img_arr)[1].tobytes()
         return conv
 
 def webcam():
+    '''
+    Acquire images from the webcam. Used for debugging purposes.
+    '''
     ret, frame = cap.read()
     #img_arr = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     cv2.imwrite("test.png", frame)
@@ -31,11 +34,22 @@ def webcam():
     return frame
 
 def update_plots(plotter, image_arr, num):
+    '''
+    Update the values of a given plot object. Intended to be called from a thread process.
+    '''
     plotter.update_vals(image_arr)
     #time.sleep(.1)
     #window.write_event_value("THREAD_FIN", num)
 
 def check_inp(event):
+    '''
+    Check events caught by the GUI.
+    Mouse clicks begin drawing rectangles, and mouse releases permanently draw the rectangle.
+    Pressing a number deletes the corresponding rectangle.
+    Handles button clicks: save image, and clear plot.
+
+    @param event: event caught by the GUI
+    '''
     # Click and Drag functionality
     if event == "graf":
         x, y = values["graf"]
@@ -55,6 +69,12 @@ def check_inp(event):
         return -2
 
 def click_and_drag(x, y):
+    '''
+    Draw and save info on the current rectangle while the mouse is being held.
+
+    @param x: current x coordinate of the mouse
+    @param y: current y coordinate of the mouse
+    '''
     global drag, corner1, corner2, curr_rect
     # First click check
     if not drag:
@@ -71,11 +91,20 @@ def click_and_drag(x, y):
         draw_rect_pair(corner1, corner2, str(len(curr_rects)+1))
 
 def draw_rect_pair(corner1, corner2, i, color="yellow"):
+    '''
+    Draws rectangle based off given coordinates, adding number label.
+
+    @param corner1: first corner of the rectangle
+    @param corner2: second corner of the rectangle
+    @param color: color of the rectangle to be drawn
+    '''
     curr_rect = graph_obj.draw_rectangle(corner1, corner2, line_color=color)
     graph_obj.draw_text(i, corner1, color="white", font=("Arial", 32))
 
 def save_rect():
-    # Called upon mouse release
+    '''
+    Save rectangle to GUI variables upon the release of a mouse. Randomly assigns a color.
+    '''
     global corner1, corner2, curr_rects, drag, main_plot
     if(corner1 is not None and corner2 is not None):
         rect = (corner1, corner2)
@@ -89,6 +118,9 @@ def save_rect():
     drag = False
 
 def update_plot(canvas):
+    '''
+    DEPRECATED
+    '''
     global fig, rect_plot
     fig_canv = FigureCanvasTkAgg(fig, canvas)
     fig_canv.get_tk_widget().forget()
@@ -102,11 +134,17 @@ def update_plot(canvas):
     f_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
 
 def thread_plot(plotter, img_arr):
+    '''
+    Wrapper function to update values of plot object.
+    '''
     plotter.update_vals(img_arr)
-    #plotter.draw_plot()
 
 
 if __name__ == "__main__":
+    '''
+    Main method for our GUI.
+    '''
+
     ### Initialize Variables
     if(debug == False):
         camera, converter = ocv.initialize()
@@ -122,10 +160,7 @@ if __name__ == "__main__":
     sg.theme("Material1")
 
     layout = [
-        #[sg.Text("RIVIR", size=(20, 1),font=("Courier, 72"), justification="center")],
         [sg.Image(filename=("RIVIR_logo_smaller.png"))],
-
-        #[sg.Text(" - Rheed Image VIeweR - ", size=(50, 1), font=("Courier, 28"), justification="center")],
 
         [sg.Graph(canvas_size=img_size,
                 graph_bottom_left=(0, 0),
@@ -138,7 +173,6 @@ if __name__ == "__main__":
 
         [sg.Button("Save Image", size=(20,1)),
         sg.Button("Clear Plot", size=(20,1))]
-        #[sg.Image(filename="", key="imgfeed")]
     ]
     ###
 
@@ -154,14 +188,17 @@ if __name__ == "__main__":
 
     ### EVENT LOOP ###
     while True:
+        # Check for events
         event, values = window.read(timeout=0)
         if event is None:
             break
 
+        # Acquire image data
         img_array = webcam() if debug else update_image()
         success = img_array is not None
         inp_ret = check_inp(event)
 
+        # Handle result of input processing, and update GUI accordingly
         if inp_ret is not None:
             if(inp_ret >= 0):
                 num_rcts = main_plot.del_line(inp_ret)
@@ -172,22 +209,25 @@ if __name__ == "__main__":
             elif(inp_ret == -2 and main_plot is not None):
                 main_plot.clear()
 
-
+        # Save image (necessary to make sure a dropped frame is not saved)
         if save_im and success:
             filename = "data/%s" % datetime.datetime.now().strftime("RIVIR-%m%d_%H%M%S.jpg")
             print(filename)
             print(cv2.imwrite(filename, img_array))
             save_im = False
 
+        # Draw rectangles with labels
         r_count = 1
         for rect in curr_rects:
             draw_rect_pair(rect[0][0], rect[0][1], r_count, color=rect[1])
             r_count+=1
 
+        # Update plot with most up to date image values.
         if success and main_plot is not None:
             threading.Thread(target=thread_plot, args=(main_plot, img_array), daemon=True).start()
             main_plot.draw_plot()
 
+    # Handle window closure.
     if(debug == False):
         print("Closing Camera Connection...")
         free_camera(camera)
