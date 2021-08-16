@@ -54,6 +54,7 @@ def grab_image(cam, conv):
         pixel_arr = image.GetArray()
 
         return pixel_arr
+        
     grab.Release()
     return None
 

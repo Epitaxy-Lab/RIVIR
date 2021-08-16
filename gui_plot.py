@@ -32,7 +32,7 @@ class plot_obj():
         self.fig = plt.Figure()
         self.fig.autofmt_xdate()
         self.axis = self.fig.add_subplot(111)
-        self.axis.axis("off")
+        #self.axis.axis("off")
         self.axis.set_facecolor("#e3f2fd")
         self.graph = FigureCanvasTkAgg(self.fig, canvas)
         self.graph.draw()
@@ -66,6 +66,7 @@ class plot_obj():
         self.plot_vals = new_vals
 
     def update_plot(self):
+        self.axis.set_xlim(left=0, right=self.plot_vals[0][0][-1])
         longest_time = self.plot_vals[0][1]
         if(len(longest_time) > 1):
             self.axis.set_xlim(longest_time[0], longest_time[-1])

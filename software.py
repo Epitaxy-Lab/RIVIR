@@ -122,15 +122,10 @@ if __name__ == "__main__":
     sg.theme("Material1")
 
     layout = [
-        [sg.Text("RIVIR",
-                size=(20, 1),
-                font=("Courier, 72"),
-                justification="center")],
+        #[sg.Text("RIVIR", size=(20, 1),font=("Courier, 72"), justification="center")],
+        [sg.Image(filename=("RIVIR_logo_smaller.png"))],
 
-        [sg.Text(" - Rheed Image VIeweR - ",
-                size=(50, 1),
-                font=("Courier, 28"),
-                justification="center")],
+        #[sg.Text(" - Rheed Image VIeweR - ", size=(50, 1), font=("Courier, 28"), justification="center")],
 
         [sg.Graph(canvas_size=img_size,
                 graph_bottom_left=(0, 0),
@@ -191,7 +186,6 @@ if __name__ == "__main__":
 
         if success and main_plot is not None:
             threading.Thread(target=thread_plot, args=(main_plot, img_array), daemon=True).start()
-            #main_plot.update_vals(img_array)
             main_plot.draw_plot()
 
     if(debug == False):
