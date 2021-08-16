@@ -7,7 +7,6 @@ import matplotlib.dates as mdates
 import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-
 plt.style.use("fast")
 
 def assign_points(coords):
@@ -30,18 +29,19 @@ class coord():
 
 class plot_obj():
     def __init__(self, rect_coords, canvas, color):
-        self.fig = plt.Figure()
-        ax = plt.Figure()
+        self.fig = plt.Figure(frameon=False)
         self.fig.autofmt_xdate()
         self.axis = self.fig.add_subplot(111)
-        self.axis.axis("off")
+        self.fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        #self.axis.axis("off")
+        #self.axis.set_facecolor("#e3f2fd")
         self.graph = FigureCanvasTkAgg(self.fig, canvas)
         self.graph.draw()
         self.graph.get_tk_widget().pack(side='right', fill='both', expand=1)
         self.bg = self.graph.copy_from_bbox(self.axis.bbox)
         self.rects = [coord(rect_coords)]
         self.plot_vals = [[[],[]]]
-        self.plots = [self.axis.plot([], [], linestyle='-', marker=',', animated=True, color=color)]
+        self.plots = [self.axis.plot_date([], [], linestyle='-', marker=',', animated=True, color=color,alpha=0.3)]
         #self.num_resizes = [0]
         self.max_int = 0
         self.min_int = 0
@@ -52,7 +52,7 @@ class plot_obj():
     def add_line(self, rect_coords, color):
         self.rects.append(coord(rect_coords))
         self.plot_vals.append([[],[]])
-        self.plots.append(self.axis.plot([], [], linestyle='-', marker=',', animated=True, color=color))
+        self.plots.append(self.axis.plot_date([], [], linestyle='-', marker=',', animated=True, color=color))
 
     def del_line(self, ind):
         del self.rects[ind]
@@ -67,15 +67,10 @@ class plot_obj():
         self.plot_vals = new_vals
 
     def update_plot(self):
-        self.axis.cla()
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            self.axis.set_xticklabels(self.plot_vals[0][1], rotation=30)
-        self.axis.set_xlabel("Time")
-        self.axis.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+        self.axis.set_xlim(left=0, right=self.plot_vals[0][0][-1])
         longest_time = self.plot_vals[0][1]
         if(len(longest_time) > 1):
-            self.axis.set_xlim(min(longest_time), max(longest_time))
+            self.axis.set_xlim(longest_time[0], longest_time[-1])
             self.axis.set_ylim(self.min_int * .8, self.max_int * 1.15)
         else:
             self.axis.set_xlim(0, 1)
@@ -85,8 +80,10 @@ class plot_obj():
         self.fig.canvas.restore_region(self.bg)
         for i, p in enumerate(self.plots):
             values = self.plot_vals[i]
-            p[0].set_ydata(values[0])
-            p[0].set_xdata(values[1])
+            x = values[1]
+            y = values[0][:len(x)]
+            p[0].set_ydata(y)
+            p[0].set_xdata(x)
             self.axis.draw_artist(p[0])
         self.graph.blit(self.fig.bbox)
         self.fig.canvas.flush_events()
@@ -94,11 +91,10 @@ class plot_obj():
 
 
     def update_val(self, ind, pixels):
-        start = time.time()
         avg_val = n = 0
         corners = self.rects[ind]
-        for x in range(corners.x1, corners.x2, 3):
-            for y in range(corners.y1, corners.y2, 3):
+        for x in range(corners.x1, corners.x2, 6):
+            for y in range(corners.y1, corners.y2, 6):
                 avg_val += sum(pixels[x][y])
                 n += 1
         avg_val = avg_val / n
@@ -124,7 +120,6 @@ class plot_obj():
     def update_vals(self, pixels):
         for i in range(len(self.rects)):
             self.update_val(i, pixels)
-
         self.update_plot()
 
     def del_self(self):

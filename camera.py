@@ -16,8 +16,11 @@ def init_cam_w_video():
     '''
     camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
     print("Connection established with device: ", camera.GetDeviceInfo().GetModelName())
+    camera.Open()
+    camera.GevSCPD.SetValue(1000)
+    camera.GevSCPSPacketSize.SetValue(500)
 
-    camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly) #OneByOne used to ensure processing done in order.
+    camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
     return camera
 
 def init_OCV_converter():
@@ -42,18 +45,20 @@ def grab_image(cam, conv):
     @raise OSError: grab unsuccessful
     @raise TimeoutError: camera exceeded timeout time
     '''
-    grab = cam.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException) #TODO: verify timeout
+    grab = cam.RetrieveResult(10000, pylon.TimeoutHandling_ThrowException) #TODO: verify timeout
 
     # if not grab.GrabSucceeded():
     #      print(grab.ErrorCode)
     #      print(grab.ErrorDescription)
-         #raise OSError("Grab failure.")
+    #      #raise OSError("Grab failure.")
 
     if grab.GrabSucceeded():
         image = conv.Convert(grab)
         pixel_arr = image.GetArray()
 
         return pixel_arr
+
+    grab.Release()
     return None
 
 def free_camera(cam):
