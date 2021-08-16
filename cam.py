@@ -1,9 +1,14 @@
 
 from pypylon import pylon
 
-camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
-camera.Open()
+tlFactory = pylon.TlFactory.GetInstance()
+devices = tlFactory.EnumerateDevices()
+camera = pylon.InstantCameraArray(min(len(devices), 2))
+for i, cam in enumerate(camera):
+    cam.Attach(tlFactory.CreateDevice(devices[i]))
+    print("Using device: ", cam.GetDeviceInfo().GetFriendlyName(), i)
 
+camera = camera[0]
 # demonstrate some feature access
 new_width = camera.Width.GetValue() - camera.Width.GetInc()
 

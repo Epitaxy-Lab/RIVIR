@@ -10,7 +10,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 plt.style.use("fast")
 
 def assign_points(coords):
-	'''
+    '''
     Return coordinate variables from a 2x2 point array
 
     @param coords: an input array of the form [[x,y],[x,y]]
@@ -23,7 +23,7 @@ def assign_points(coords):
     return x1, x2, y1, y2
 
 def resize_list(list):
-	'''
+    '''
     Delete every other entry of the first half of a list, to better optimize plotting performance.
 
     @param list: list of points you would like to resize.
@@ -106,9 +106,9 @@ class plot_obj():
         self.plot_vals = new_vals
 
     def update_plot(self):
-		'''
-		Update axis values of the current plot.
-		'''
+        '''
+        Update axis values of the current plot.
+        '''
         self.axis.set_xlim(left=0, right=self.plot_vals[0][0][-1])
         longest_time = self.plot_vals[0][1]
         if(len(longest_time) > 1):
@@ -119,9 +119,9 @@ class plot_obj():
             self.axis.set_ylim(0, 1)
 
     def draw_plot(self):
-		'''
-		Update the animation of the plot with the latest data. Uses blitting.
-		'''
+        '''
+        Update the animation of the plot with the latest data. Uses blitting.
+        '''
         self.fig.canvas.restore_region(self.bg)
         for i, p in enumerate(self.plots):
             values = self.plot_vals[i]
@@ -136,12 +136,12 @@ class plot_obj():
 
 
     def update_val(self, ind, pixels):
-		'''
-		Using the coordinates of the line, acquire the latest value of the pixel intensities in the coordinate box.
+        '''
+        Using the coordinates of the line, acquire the latest value of the pixel intensities in the coordinate box.
 
-		@param ind: index corresponding to the rectangle area you would like to analyze.
-		@param pixels: pixel array containing the values you would like to analyze.
-		'''
+        @param ind: index corresponding to the rectangle area you would like to analyze.
+        @param pixels: pixel array containing the values you would like to analyze.
+        '''
         avg_val = n = 0
         corners = self.rects[ind]
         for x in range(corners.x1, corners.x2, 6):
@@ -169,16 +169,16 @@ class plot_obj():
             print("RESIZE")
 
     def update_vals(self, pixels):
-		'''
-		Update the values of all lines on the plot.
-		'''
+        '''
+        Update the values of all lines on the plot.
+        '''
         for i in range(len(self.rects)):
             self.update_val(i, pixels)
         self.update_plot()
 
     def del_self(self):
-		'''
-		Delete the current plot.
-		'''
+        '''
+        Delete the current plot.
+        '''
         self.graph.get_tk_widget().forget()
         plt.close('all')
